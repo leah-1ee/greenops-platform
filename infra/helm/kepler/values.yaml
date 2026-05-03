@@ -1,0 +1,32 @@
+# Kepler Helm chart values
+# Kepler: Kubernetes 워크로드별 전력 소비량을 eBPF로 측정하는 에이전트
+# 설치: helm install kepler kepler/kepler \
+#         -f infra/helm/kepler/values.yaml -n kepler --create-namespace
+
+# ─── ServiceMonitor ───────────────────────────────────────────────────────────
+serviceMonitor:
+  enabled: true        # Prometheus Operator가 자동으로 scrape 대상에 추가
+  interval: 15s        # prometheus/values.yaml 의 scrapeInterval과 동일하게 설정
+
+# ─── k3s 환경 대응 ────────────────────────────────────────────────────────────
+# k3s는 containerd를 런타임으로 사용하며, 소켓 경로가 표준과 다름
+collector:
+  collectorType: ebpf       # eBPF 기반 커널 레벨 에너지 측정 (가장 정확)
+  containerRuntime: containerd
+
+  # k3s 기본 containerd 소켓 경로 (Docker 기본값 /run/containerd/containerd.sock 과 다름)
+  containerdSocketPath: /run/k3s/containerd/containerd.sock
+
+# ─── 리소스 제한 (단일 노드 MVP 환경 기준) ────────────────────────────────────
+resources:
+  requests:
+    cpu: 100m
+    memory: 128Mi
+  limits:
+    cpu: 500m
+    memory: 256Mi
+
+# ─── 권한 설정 ────────────────────────────────────────────────────────────────
+# eBPF 수집을 위해 privileged 모드 필요
+securityContext:
+  privileged: true

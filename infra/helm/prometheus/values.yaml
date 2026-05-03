@@ -1,0 +1,62 @@
+# kube-prometheus-stack Helm chart values
+# 설치: helm install prometheus prometheus-community/kube-prometheus-stack \
+#         -f infra/helm/prometheus/values.yaml -n monitoring --create-namespace
+
+# ─── Grafana ─────────────────────────────────────────────────────────────────
+grafana:
+  service:
+    type: NodePort
+    nodePort: 30300   # 브라우저에서 <노드IP>:30300 으로 접근
+
+  # 운영 환경에서는 반드시 변경하거나 Kubernetes Secret으로 주입하세요.
+  adminPassword: greenops
+
+  persistence:
+    enabled: false    # MVP 단계 - 재시작 시 대시보드 유실 감수, 심플함 우선
+
+# ─── Prometheus ──────────────────────────────────────────────────────────────
+prometheus:
+  prometheusSpec:
+    retention: 7d     # 7일치 메트릭 보관 (디스크 부담 최소화)
+
+    # Kepler scrape 주기(15s)와 맞춰 전체 수집 간격 통일
+    scrapeInterval: 15s
+    evaluationInterval: 15s
+
+    # Kepler ServiceMonitor를 자동으로 인식하기 위한 selector 설정
+    # Kepler chart가 붙이는 label: app.kubernetes.io/name=kepler
+    serviceMonitorSelector:
+      matchExpressions:
+        - key: app.kubernetes.io/name
+          operator: In
+          values:
+            - kepler
+            - prometheus   # 자기 자신 및 스택 내부 모니터도 포함
+
+    # 모든 네임스페이스의 ServiceMonitor를 탐색
+    serviceMonitorNamespaceSelector: {}
+
+# ─── Alertmanager ─────────────────────────────────────────────────────────────
+alertmanager:
+  enabled: true       # 활성화는 하되 최소 설정 유지
+
+  config:
+    global:
+      resolve_timeout: 5m
+    route:
+      receiver: "null"   # 추후 Slack 웹훅 receiver로 교체 예정
+    receivers:
+      - name: "null"     # 더미 receiver - 알림을 실질적으로 버림
+
+# ─── 필수 exporter 활성화 및 불필요한 내장 메트릭 비활성화 (MVP 경량화) ──────
+kubeStateMetrics:
+  enabled: true        # 파드/디플로이먼트 상태 수집 필요
+
+nodeExporter:
+  enabled: true        # 노드 CPU/메모리/디스크 메트릭 필요
+
+# 내장 etcd/proxy 메트릭은 k3s 단일 노드 환경에서 불필요
+kubeEtcd:
+  enabled: false
+kubeProxy:
+  enabled: false
