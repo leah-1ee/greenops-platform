@@ -1,0 +1,21 @@
+# greenops-ai ResourceQuota
+# 적용: kubectl apply -f infra/manifests/quotas/ai-quota.yaml
+#
+# 단일 노드 4코어/8GB 기준 파트별 배분:
+#   - AI 추론·학습 워크로드는 burst 연산이 필요하므로 backend와 동일 수치 배정
+#   - requests를 낮게 잡아 평상시 다른 파트가 자원을 유연하게 사용할 수 있도록 함
+#   - limits으로 노드 자원 고갈 방지
+
+apiVersion: v1
+kind: ResourceQuota
+metadata:
+  name: ai-quota
+  namespace: greenops-ai
+  labels:
+    app.kubernetes.io/part-of: greenops
+spec:
+  hard:
+    requests.cpu: "500m"
+    limits.cpu: "1000m"
+    requests.memory: "512Mi"
+    limits.memory: "1Gi"

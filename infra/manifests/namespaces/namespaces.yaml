@@ -1,0 +1,44 @@
+# GreenOps 네임스페이스 정의
+# 적용: kubectl apply -f infra/manifests/namespaces/
+#
+# 파트별 워크로드를 격리하여 RBAC·리소스 쿼터를 독립적으로 관리한다.
+
+---
+# REST API 서버, CronJob 스케줄러 등 백엔드 워크로드
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: greenops-backend
+  labels:
+    app.kubernetes.io/part-of: greenops
+    app.kubernetes.io/managed-by: helm
+
+---
+# 에너지 패턴 분석·예측 AI/ML 워크로드
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: greenops-ai
+  labels:
+    app.kubernetes.io/part-of: greenops
+    app.kubernetes.io/managed-by: helm
+
+---
+# React 등 프론트엔드 정적 서빙 워크로드
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: greenops-front
+  labels:
+    app.kubernetes.io/part-of: greenops
+    app.kubernetes.io/managed-by: helm
+
+---
+# Carbon Aware SDK, 공통 설정 등 인프라 지원 워크로드
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: greenops-infra
+  labels:
+    app.kubernetes.io/part-of: greenops
+    app.kubernetes.io/managed-by: helm

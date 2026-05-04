@@ -1,0 +1,49 @@
+# greenops-ai RBAC
+# 적용: kubectl apply -f infra/manifests/rbac/ai-rbac.yaml
+#
+# AI 모듈은 CronJob 실행 이력과 Pod 상태를 읽어 에너지 패턴을 분석하지만
+# 스케줄 변경 권한은 backend-sa에만 위임하므로 update·patch를 부여하지 않는다.
+
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: ai-sa
+  namespace: greenops-ai
+  labels:
+    app.kubernetes.io/part-of: greenops
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: ai-role
+  namespace: greenops-ai
+  labels:
+    app.kubernetes.io/part-of: greenops
+rules:
+  # 자기 네임스페이스 Pod 상태 조회
+  - apiGroups: [""]
+    resources: ["pods"]
+    verbs: ["get", "list", "watch"]
+  # 패턴 분석용 CronJob/Job 이력 읽기 전용 (쓰기 권한 없음)
+  - apiGroups: ["batch"]
+    resources: ["cronjobs", "jobs"]
+    verbs: ["get", "list", "watch"]
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: ai-rolebinding
+  namespace: greenops-ai
+  labels:
+    app.kubernetes.io/part-of: greenops
+subjects:
+  - kind: ServiceAccount
+    name: ai-sa
+    namespace: greenops-ai
+roleRef:
+  kind: Role
+  name: ai-role
+  apiGroup: rbac.authorization.k8s.io
