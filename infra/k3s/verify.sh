@@ -199,7 +199,7 @@ CARBON_POD_NAME=$(kubectl get pods -n greenops-infra \
 if [ -z "$CARBON_POD_NAME" ]; then
   fail "carbon-aware-sdk Pod를 찾을 수 없음 (/locations 확인 불가)"
 else
-  LOCATIONS_RESULT=$(kubectl exec "$CARBON_POD_NAME" -n greenops-infra \
+  LOCATIONS_RESULT=$(kubectl exec -n greenops-infra "$CARBON_POD_NAME" \
     -- curl -s --max-time 10 http://localhost:8080/locations 2>/dev/null || true)
   if echo "$LOCATIONS_RESULT" | grep -q '"KR"'; then
     pass "/locations 응답에 'KR' 포함됨 (Pod: ${CARBON_POD_NAME})"

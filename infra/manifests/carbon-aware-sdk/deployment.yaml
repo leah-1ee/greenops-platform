@@ -1,8 +1,6 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  annotations:
-    deployment.kubernetes.io/revision: "25"
   name: carbon-aware-sdk
   namespace: greenops-infra
 spec:
@@ -82,7 +80,6 @@ spec:
       restartPolicy: Always
       schedulerName: default-scheduler
       securityContext: {}
-      serviceAccount: infra-sa
       serviceAccountName: infra-sa
       terminationGracePeriodSeconds: 30
       volumes:
@@ -90,23 +87,3 @@ spec:
           defaultMode: 420
           name: carbon-aware-sdk-config
         name: app-config
-status:
-  availableReplicas: 1
-  conditions:
-  - lastTransitionTime: "2026-05-04T07:02:49Z"
-    lastUpdateTime: "2026-05-04T07:02:49Z"
-    message: Deployment has minimum availability.
-    reason: MinimumReplicasAvailable
-    status: "True"
-    type: Available
-  - lastTransitionTime: "2026-05-04T05:34:16Z"
-    lastUpdateTime: "2026-05-04T07:02:49Z"
-    message: ReplicaSet "carbon-aware-sdk-57d9d47885" has successfully progressed.
-    reason: NewReplicaSetAvailable
-    status: "True"
-    type: Progressing
-  observedGeneration: 32
-  readyReplicas: 1
-  replicas: 1
-  terminatingReplicas: 0
-  updatedReplicas: 1

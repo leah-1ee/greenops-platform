@@ -26,9 +26,9 @@ rules:
   - apiGroups: [""]
     resources: ["pods"]
     verbs: ["get", "list", "watch"]
-  # 패턴 분석용 CronJob/Job 이력 읽기 전용 (쓰기 권한 없음)
+  # 패턴 분석용 CronJob 이력 읽기 전용 (쓰기 권한 없음)
   - apiGroups: ["batch"]
-    resources: ["cronjobs", "jobs"]
+    resources: ["cronjobs"]
     verbs: ["get", "list", "watch"]
 
 ---

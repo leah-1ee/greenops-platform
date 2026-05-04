@@ -11,7 +11,6 @@ metadata:
   name: greenops-backend
   labels:
     app.kubernetes.io/part-of: greenops
-    app.kubernetes.io/managed-by: helm
 
 ---
 # 에너지 패턴 분석·예측 AI/ML 워크로드
@@ -21,7 +20,6 @@ metadata:
   name: greenops-ai
   labels:
     app.kubernetes.io/part-of: greenops
-    app.kubernetes.io/managed-by: helm
 
 ---
 # React 등 프론트엔드 정적 서빙 워크로드
@@ -31,7 +29,6 @@ metadata:
   name: greenops-front
   labels:
     app.kubernetes.io/part-of: greenops
-    app.kubernetes.io/managed-by: helm
 
 ---
 # Carbon Aware SDK, 공통 설정 등 인프라 지원 워크로드
@@ -41,4 +38,4 @@ metadata:
   name: greenops-infra
   labels:
     app.kubernetes.io/part-of: greenops
-    app.kubernetes.io/managed-by: helm
+
