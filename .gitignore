@@ -43,6 +43,9 @@ grafana/data/
 # ── Carbon Aware SDK 로컬 설정 ───────────────
 infra/carbon-aware-sdk/appsettings.local.json
 
+# Carbon Aware SDK 실제 API 키 (secret.yaml.template을 복사해서 사용)
+infra/manifests/carbon-aware-sdk/secret.yaml
+
 # ── IDE ─────────────────────────────────────
 .idea/
 .vscode/

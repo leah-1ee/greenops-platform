@@ -1,0 +1,52 @@
+apiVersion: v1
+data:
+  appsettings.json: |
+    {
+      "DataSources": {
+        "EmissionsDataSource": "ElectricityMaps",
+        "Configurations": {
+          "ElectricityMaps": {
+            "Type": "ElectricityMaps",
+            "APITokenHeader": "auth-token",
+            "BaseURL": "https://api.electricitymap.org/v3/"
+          }
+        }
+      },
+      "LocationDataSourcesConfiguration": {
+        "LocationSourceFiles": ["locations.json"]
+      },
+      "Logging": {
+        "LogLevel": {
+          "Default": "Information",
+          "Microsoft.AspNetCore": "Warning"
+        }
+      },
+      "AllowedHosts": "*"
+    }
+  locations.json: |
+    {
+      "KR": {
+        "Latitude": "37.5665",
+        "Longitude": "126.9780",
+        "Name": "KR"
+      },
+      "JP-TK": {
+        "Latitude": "35.6762",
+        "Longitude": "139.6503",
+        "Name": "JP-TK"
+      },
+      "US-MIDA-PJM": {
+        "Latitude": "37.3719",
+        "Longitude": "-79.8164",
+        "Name": "US-MIDA-PJM"
+      }
+    }
+kind: ConfigMap
+metadata:
+  annotations:
+    kubectl.kubernetes.io/last-applied-configuration: |
+      {"apiVersion":"v1","data":{"appsettings.json":"{\n  \"DataSources\": {\n    \"EmissionsDataSource\": \"ElectricityMaps\",\n    \"Configurations\": {\n      \"ElectricityMaps\": {\n        \"Type\": \"ElectricityMaps\",\n        \"APITokenHeader\": \"auth-token\",\n        \"BaseURL\": \"https://api.electricitymap.org/v3/\"\n      }\n    }\n  },\n  \"LocationDataSourcesConfiguration\": {\n    \"LocationSourceFiles\": [\"locations.json\"]\n  },\n  \"Logging\": {\n    \"LogLevel\": {\n      \"Default\": \"Information\",\n      \"Microsoft.AspNetCore\": \"Warning\"\n    }\n  },\n  \"AllowedHosts\": \"*\"\n}\n","locations.json":"{\n  \"KR\": {\n    \"Latitude\": 37.5665,\n    \"Longitude\": 126.9780,\n    \"Name\": \"KR\"\n  },\n  \"JP-TK\": {\n    \"Latitude\": 35.6762,\n    \"Longitude\": 139.6503,\n    \"Name\": \"JP-TK\"\n  },\n  \"US-MIDA-PJM\": {\n    \"Latitude\": 37.3719,\n    \"Longitude\": -79.8164,\n    \"Name\": \"US-MIDA-PJM\"\n  }\n}\n"},"kind":"ConfigMap","metadata":{"annotations":{},"labels":{"app.kubernetes.io/part-of":"greenops"},"name":"carbon-aware-sdk-config","namespace":"greenops-infra"}}
+  labels:
+    app.kubernetes.io/part-of: greenops
+  name: carbon-aware-sdk-config
+  namespace: greenops-infra
