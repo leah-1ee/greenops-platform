@@ -1,0 +1,22 @@
+# greenops-backend ResourceQuota
+# 적용: kubectl apply -f infra/manifests/quotas/backend-quota.yaml
+#
+# 단일 노드 4코어/8GB 기준 파트별 배분:
+#   - 시스템·모니터링 스택(k3s, Prometheus, Kepler 등) 예약: ~1코어 / ~2GB
+#   - 남은 3코어 / 6GB를 4개 파트에 분배
+#   - backend·ai는 연산 부하가 높으므로 각 1코어(limit) / 1GB(limit) 배정
+#   - front·infra는 경량 워크로드이므로 각 0.5코어(limit) / 512MB(limit) 배정
+
+apiVersion: v1
+kind: ResourceQuota
+metadata:
+  name: backend-quota
+  namespace: greenops-backend
+  labels:
+    app.kubernetes.io/part-of: greenops
+spec:
+  hard:
+    requests.cpu: "500m"
+    limits.cpu: "1000m"
+    requests.memory: "512Mi"
+    limits.memory: "1Gi"

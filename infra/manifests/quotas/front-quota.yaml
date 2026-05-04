@@ -1,0 +1,20 @@
+# greenops-front ResourceQuota
+# 적용: kubectl apply -f infra/manifests/quotas/front-quota.yaml
+#
+# 단일 노드 4코어/8GB 기준 파트별 배분:
+#   - 프론트엔드는 정적 파일 서빙 위주로 연산 부하가 낮음
+#   - backend·ai 대비 절반 수치를 배정하여 남은 자원을 heavy 파트에 양보
+
+apiVersion: v1
+kind: ResourceQuota
+metadata:
+  name: front-quota
+  namespace: greenops-front
+  labels:
+    app.kubernetes.io/part-of: greenops
+spec:
+  hard:
+    requests.cpu: "250m"
+    limits.cpu: "500m"
+    requests.memory: "256Mi"
+    limits.memory: "512Mi"

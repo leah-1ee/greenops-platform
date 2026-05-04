@@ -1,0 +1,56 @@
+# greenops-backend RBAC
+# 적용: kubectl apply -f infra/manifests/rbac/backend-rbac.yaml
+#
+# 백엔드 서버가 탄소 강도에 따라 CronJob 스케줄을 동적으로 변경하는 API를 호출하므로
+# cronjobs 에 update·patch 권한을 부여한다. jobs는 읽기 전용.
+
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: backend-sa
+  namespace: greenops-backend
+  labels:
+    app.kubernetes.io/part-of: greenops
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: backend-role
+  namespace: greenops-backend
+  labels:
+    app.kubernetes.io/part-of: greenops
+rules:
+  # 자기 네임스페이스 Pod 상태 조회
+  - apiGroups: [""]
+    resources: ["pods"]
+    verbs: ["get", "list", "watch"]
+  # 서비스 디스커버리용 Service 조회
+  - apiGroups: [""]
+    resources: ["services"]
+    verbs: ["get", "list"]
+  # CronJob 스케줄 자동 업데이트 API 용도 (update·patch 필요)
+  - apiGroups: ["batch"]
+    resources: ["cronjobs"]
+    verbs: ["get", "list", "watch", "update", "patch"]
+  - apiGroups: ["batch"]
+    resources: ["jobs"]
+    verbs: ["get", "list", "watch"]
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: backend-rolebinding
+  namespace: greenops-backend
+  labels:
+    app.kubernetes.io/part-of: greenops
+subjects:
+  - kind: ServiceAccount
+    name: backend-sa
+    namespace: greenops-backend
+roleRef:
+  kind: Role
+  name: backend-role
+  apiGroup: rbac.authorization.k8s.io
