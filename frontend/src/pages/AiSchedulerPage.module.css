@@ -1,0 +1,320 @@
+.page {
+  min-height: 100vh;
+  background-color: var(--color-bg);
+  color: var(--color-text);
+  display: flex;
+  flex-direction: column;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 24px;
+  background-color: var(--color-panel);
+  border-bottom: 1px solid var(--color-border);
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--color-text-secondary);
+}
+
+.breadcrumb a {
+  color: var(--color-ai-blue);
+  text-decoration: none;
+}
+
+.main {
+  flex: 1;
+  padding: 16px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+/* ── 현황 배너 ────────────────────────────────────────────────────────────── */
+.statusBanner {
+  display: flex;
+  gap: 12px;
+  align-items: stretch;
+}
+
+.statusCard {
+  flex: 1;
+  background-color: var(--color-panel);
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+  padding: 14px 18px;
+}
+
+.statusLabel {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--color-text-secondary);
+  margin-bottom: 6px;
+}
+
+.statusValue {
+  font-size: 24px;
+  font-weight: 700;
+  font-family: var(--font-mono);
+}
+
+.statusMeta {
+  font-size: 11px;
+  color: var(--color-text-secondary);
+  margin-top: 4px;
+}
+
+/* ── 섹션 공통 ────────────────────────────────────────────────────────────── */
+.section {
+  background-color: var(--color-panel);
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+  padding: 16px;
+}
+
+.sectionHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 14px;
+  gap: 12px;
+}
+
+.sectionTitle {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--color-text);
+  margin: 0;
+}
+
+.sectionNote {
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--color-text-secondary);
+}
+
+/* ── 추천 버튼 ────────────────────────────────────────────────────────────── */
+.recommendBtn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 16px;
+  border-radius: 4px;
+  border: none;
+  background-color: var(--color-ai-blue);
+  color: #fff;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: opacity 0.15s;
+  white-space: nowrap;
+}
+
+.recommendBtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.spinner {
+  width: 12px;
+  height: 12px;
+  border: 2px solid rgba(255,255,255,0.4);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* ── 슬롯 카드 ────────────────────────────────────────────────────────────── */
+.slotList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.slotItem {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 12px;
+  border-radius: 6px;
+  border: 1px solid var(--color-border);
+  background-color: var(--color-bg);
+}
+
+.slotItem[data-top='true'] {
+  border-color: var(--color-carbon-low);
+  background-color: rgba(115, 191, 105, 0.05);
+}
+
+.slotRank { font-size: 20px; flex-shrink: 0; margin-top: 2px; }
+
+.slotBody { flex: 1; min-width: 0; }
+
+.slotTime {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--color-text);
+}
+
+.slotDuration {
+  font-size: 11px;
+  color: var(--color-text-secondary);
+}
+
+.slotReason {
+  font-size: 12px;
+  color: var(--color-text-secondary);
+  margin-top: 4px;
+}
+
+.slotStats {
+  text-align: right;
+  flex-shrink: 0;
+}
+
+.slotIntensity {
+  font-size: 15px;
+  font-weight: 600;
+  font-family: var(--font-mono);
+  color: var(--color-text);
+}
+
+.slotIntensity small {
+  font-size: 10px;
+  font-weight: 400;
+  color: var(--color-text-secondary);
+}
+
+.slotSaving {
+  font-size: 12px;
+  color: var(--color-carbon-low);
+  font-weight: 500;
+  margin-top: 2px;
+}
+
+.applyBtn {
+  margin-top: 8px;
+  padding: 4px 10px;
+  font-size: 11px;
+  border-radius: 4px;
+  border: 1px solid var(--color-ai-blue);
+  background: transparent;
+  color: var(--color-ai-blue);
+  cursor: pointer;
+  transition: background-color 0.15s;
+}
+
+.applyBtn:hover { background-color: rgba(87, 148, 242, 0.1); }
+.applyBtn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+.appliedBadge {
+  font-size: 11px;
+  color: var(--color-carbon-low);
+  margin-top: 8px;
+}
+
+/* ── 히스토리 테이블 ─────────────────────────────────────────────────────── */
+.histTable {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+}
+
+.histTable th {
+  text-align: left;
+  padding: 5px 10px;
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--color-text-secondary);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.histTable td {
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--color-border);
+  color: var(--color-text);
+}
+
+.histTable tr:last-child td { border-bottom: none; }
+
+.histTable tbody tr:hover td { background-color: var(--color-hover); }
+
+.applied {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 10px;
+  font-size: 10px;
+  font-weight: 600;
+}
+
+.applied[data-applied='true']  { background: rgba(115,191,105,0.15); color: var(--color-carbon-low); }
+.applied[data-applied='false'] { background: rgba(140,142,152,0.12); color: var(--color-text-muted); }
+
+/* ── 빈 상태 / 로딩 ──────────────────────────────────────────────────────── */
+.empty {
+  text-align: center;
+  padding: 32px;
+  font-size: 13px;
+  color: var(--color-text-secondary);
+}
+
+.empty small {
+  display: block;
+  font-size: 11px;
+  margin-top: 6px;
+  color: var(--color-text-muted);
+}
+
+.errMsg {
+  padding: 14px;
+  border-radius: 4px;
+  font-size: 13px;
+  text-align: center;
+  background-color: rgba(242,73,92,0.08);
+  color: var(--color-carbon-high);
+}
+
+.loadingMsg {
+  padding: 14px;
+  border-radius: 4px;
+  font-size: 13px;
+  text-align: center;
+  background-color: rgba(87,148,242,0.08);
+  color: var(--color-ai-blue);
+}
+
+.newResult {
+  border: 1px solid var(--color-ai-blue);
+  border-radius: 6px;
+  padding: 12px;
+  margin-bottom: 10px;
+  background-color: rgba(87,148,242,0.04);
+}
+
+.newResultLabel {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--color-ai-blue);
+  margin-bottom: 8px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}

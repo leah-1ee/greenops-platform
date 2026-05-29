@@ -1,0 +1,67 @@
+/* OverviewPage.module.css — 다크모드 ESG 테마 */
+
+.page {
+  background-color: var(--color-bg);
+  color: var(--color-text);
+  display: flex;
+  flex-direction: column;
+}
+
+/* ── 메인 콘텐츠 ─────────────────────────────────────────────────────────── */
+.main {
+  flex: 1;
+  padding: 16px 24px;
+}
+
+/* Week 2 그리드 레이아웃 (현재 주석 처리) */
+.kpiRow {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.chartRow {
+  display: grid;
+  grid-template-columns: 5fr 7fr;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.heatmapRow {
+  margin-bottom: 12px;
+}
+
+.heatmapPlaceholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  height: 120px;
+  border: 1px dashed var(--color-border);
+  border-radius: 8px;
+  background-color: var(--color-panel);
+}
+
+.heatmapTitle {
+  font-size: 13px;
+  color: var(--color-text-secondary);
+  font-weight: 500;
+}
+
+.heatmapNote {
+  font-size: 11px;
+  color: var(--color-text-muted);
+}
+
+/* ── 푸터 ────────────────────────────────────────────────────────────────── */
+.footer {
+  padding: 10px 24px;
+  background-color: var(--color-panel);
+  border-top: 1px solid var(--color-border);
+  display: flex;
+  gap: 12px;
+  font-size: 11px;
+  color: var(--color-text-muted);
+}

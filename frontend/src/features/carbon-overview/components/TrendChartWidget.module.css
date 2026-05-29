@@ -1,0 +1,12 @@
+.wrap {
+  padding-top: 4px;
+}
+
+.legend {
+  display: flex;
+  gap: 16px;
+  justify-content: flex-end;
+  margin-top: 6px;
+  font-size: 11px;
+  font-family: var(--font-mono);
+}

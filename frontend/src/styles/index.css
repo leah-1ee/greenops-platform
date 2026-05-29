@@ -1,0 +1,102 @@
+/* ────────────────────────────────────────────────────────────────────────────
+   GreenOps — 전역 스타일
+   다크모드 ESG 테마 · Grafana 대시보드와 색상 체계 통일
+   ──────────────────────────────────────────────────────────────────────────── */
+
+/* ── CSS 커스텀 프로퍼티 (테마 토큰) ─────────────────────────────────────── */
+:root {
+  /* 배경 */
+  --color-bg:           #111217;   /* Grafana 다크 배경 */
+  --color-panel:        #181b1f;   /* 패널 배경 */
+  --color-hover:        #22252b;   /* 호버 상태 */
+  --color-border:       #2c2f36;   /* 구분선 */
+
+  /* 텍스트 */
+  --color-text:         #d8d9da;   /* 기본 텍스트 */
+  --color-text-secondary: #8e8e8e; /* 부가 설명 */
+  --color-text-muted:   #5c6370;   /* 최소 강조 */
+
+  /* 탄소 레벨 — Grafana threshold 색상과 동일 */
+  --color-carbon-low:    #73BF69;  /* 낮음 (좋음) */
+  --color-carbon-medium: #FADE2A;  /* 중간 (주의) */
+  --color-carbon-high:   #F2495C;  /* 높음 (위험) */
+
+  /* AI 추천 */
+  --color-ai-blue:       #5794F2;
+
+  /* 절감 효과 */
+  --color-saving:        #73BF69;
+
+  /* 폰트 */
+  --font-mono: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+  --font-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+/* ── 리셋 ────────────────────────────────────────────────────────────────── */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  font-size: 14px;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  font-family: var(--font-sans);
+  background-color: var(--color-bg);
+  color: var(--color-text);
+  line-height: 1.5;
+}
+
+#root {
+  min-height: 100vh;
+}
+
+/* ── 스크롤바 (Grafana 스타일) ─────────────────────────────────────────────── */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--color-bg);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--color-border);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #3d424e;
+}
+
+/* ── Grafana iframe 기본 스타일 ─────────────────────────────────────────── */
+iframe {
+  display: block;
+  border: none;
+  border-radius: 4px;
+}
+
+/* ── 유틸리티 ────────────────────────────────────────────────────────────── */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* 탄소 레벨 색상 유틸 */
+.carbon-low    { color: var(--color-carbon-low); }
+.carbon-medium { color: var(--color-carbon-medium); }
+.carbon-high   { color: var(--color-carbon-high); }
+.carbon-ai     { color: var(--color-ai-blue); }

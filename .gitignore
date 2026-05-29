@@ -56,6 +56,9 @@ infra/manifests/carbon-aware-sdk/secret.yaml
 .DS_Store
 Thumbs.db
 
+# ── Frontend ────────────────────────────────
+frontend/node_modules/
+
 # ── 로그 ────────────────────────────────────
 *.log
 logs/
