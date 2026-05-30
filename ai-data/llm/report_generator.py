@@ -1,65 +1,45 @@
 import os
-import json
-import glob
-import pandas as pd
-from google import genai
-from analysis.optimizer import find_optimal_window
+from llm.client import get_genai_client
+from llm.prompt_templates import get_recommendation_report_prompt
+from analysis.region_scorer import get_best_region
 
-DATA_DIR = "/home/ubuntu/carbon-ai-data/data/raw/"
-WORK_HOURS = 3
-zones = ["KR", "JP-TK", "US-MIDA-PJM"]
-results = []
+def generate_carbon_report(work_hours=3, zones=None):
+    """
+    지정된 zones 및 작업 시간에 대해 최적 리전을 스코어링하고
+    그 결과를 기반으로 Gemini API를 호출하여 자연어 리포트를 생성해 반환합니다.
+    """
+    # 1. 최적 리전 및 데이터 추출
+    scoring_result = get_best_region(work_hours=work_hours, zones=zones)
+    if not scoring_result:
+        return "분석 가능한 이력 탄소 배출 데이터가 부족하여 리포트를 생성할 수 없습니다."
+        
+    # 2. Gemini 클라이언트 가져오기 (환경변수 부족 시 KeyError 발생)
+    client = get_genai_client()
+    
+    # 3. 프롬프트 구성
+    prompt = get_recommendation_report_prompt(scoring_result, work_hours)
+    
+    # 4. Gemini 모델 호출 (gemini-2.5-flash 모델 적용)
+    try:
+        response = client.models.generate_content(
+            model="gemini-2.5-flash",
+            contents=prompt
+        )
+        return response.text.strip()
+    except Exception as e:
+        print(f"Gemini API 호출 중 오류 발생: {e}")
+        raise e
 
-for zone in zones:
-    files = glob.glob(f"{DATA_DIR}{zone}_*.json")
-    if not files:
-        continue
-    filepath = None
-    for f in sorted(files, reverse=True):
-        data = json.load(open(f))
-        if data.get("history"):
-            filepath = f
-            break
-    if not filepath:
-        continue
-    with open(filepath) as f:
-        raw = json.load(f)
-    df = pd.DataFrame(raw["history"])
-    if df.empty or "datetime" not in df.columns:
-        continue
-    df["datetime"] = pd.to_datetime(df["datetime"])
-    avg = df["carbonIntensity"].mean()
-    opt = find_optimal_window(df, WORK_HOURS)
-    results.append({
-        "zone": zone,
-        "avg": round(avg, 1),
-        "opt_time": str(opt["start_time"]),
-        "opt_intensity": opt["avg_intensity"]
-    })
 
-best = min(results, key=lambda x: x["opt_intensity"])
-
-regions_summary = "\n".join([
-    f"- {r['zone']}: 평균 {r['avg']} gCO2/kWh | 최적 시간 {r['opt_time']} ({r['opt_intensity']} gCO2/kWh)"
-    for r in results
-])
-
-prompt = f"""
-당신은 탄소 인식 클라우드 컴퓨팅 전문가입니다.
-다음 멀티리전 탄소 분석 결과를 바탕으로 한국어로 추천 리포트를 한 문단으로 작성하세요.
-
-분석 리전:
-{regions_summary}
-
-최적 리전: {best['zone']} ({best['opt_intensity']} gCO2/kWh)
-작업 시간: {WORK_HOURS}시간
-
-최적 리전과 시간, 다른 리전 대비 장점, 절감 효과를 포함하세요.
-"""
-
-client = genai.Client(api_key=os.environ["GEMINI_API_KEY"])
-response = client.models.generate_content(
-    model="gemini-2.5-flash",
-    contents=prompt
-)
-print(response.text)
+# === LOCAL_TEST_ONLY START ===
+if __name__ == "__main__":
+    # 이 파일 단독 실행 테스트 (터미널에 GEMINI_API_KEY가 반드시 설정되어 있어야 함)
+    # 윈도우 파워쉘 실행 예: $env:GEMINI_API_KEY="your-key-here"; python -m llm.report_generator
+    print("--- 자연어 리포트 생성기 테스트 ---")
+    try:
+        report = generate_carbon_report(work_hours=3)
+        print("\n[생성된 리포트 내용]")
+        print(report)
+    except Exception as e:
+        print(f"\n[오류 발생] 리포트 생성 실패: {e}")
+# === LOCAL_TEST_ONLY END ===
