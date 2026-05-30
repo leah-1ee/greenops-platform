@@ -7,7 +7,7 @@ router = APIRouter()
 @router.get("")
 def recommendation_report(
     hours: int = 3,
-    zones: List[str] = Query(["KR", "JP-TK", "US-MIDA-PJM"])
+    zones: List[str] = Query(default=["KR", "JP-TK", "US-MIDA-PJM"])
 ):
     """
     각 리전별 탄소 집약도 예측 통계치를 기반으로
