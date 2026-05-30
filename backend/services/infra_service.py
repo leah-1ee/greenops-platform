@@ -1,20 +1,17 @@
-"""
-인프라 서비스 — 메트릭 데이터 수집
-
-    이 파일의 함수들을 Prometheus API 호출 코드로 교체
-    → calculator, router 등 다른 코드는 변경 불필요
-"""
-
 import random
+import requests
 from datetime import datetime, timezone
 
+from config import settings
+from utils.logger import get_logger
 
-# ─── 설정값 ────────────────────────────────────────────────────────────────
-# 인프라팀과 합의된 실제 값으로 추후 교체
-DEFAULT_INSTANCE_TYPE = "t3.medium"
-DEFAULT_REGION_CODE = "ap-northeast-2"   # 서울
+logger = get_logger(__name__)
 
-# 가상 파드 목록 (실제 K8s 클러스터에서는 Prometheus가 자동으로 알려줌)
+
+# 시스템 프로세스 (Kepler가 보고하는 비-K8s 파드)
+EXCLUDED_POD_NAMES = ["unknown", "kernel_processes", "system_processes"]
+
+
 MOCK_POD_PROFILES = [
     {"name": "greenops-api-server",  "base_cpu": 35, "base_mem": 1.5},
     {"name": "greenops-database",    "base_cpu": 25, "base_mem": 2.0},
@@ -24,50 +21,126 @@ MOCK_POD_PROFILES = [
 ]
 
 
+# ─── Prometheus 쿼리 헬퍼 ───────────────────────────────────────────────────
+
+def _query_prometheus(query: str) -> list:
+    """ Prometheus에 PromQL 쿼리 실행하고 결과 반환 """
+    try:
+        response = requests.get(
+            f"{settings.prometheus_url}/api/v1/query",
+            params={"query": query},
+            timeout=settings.prometheus_timeout_sec,
+        )
+        response.raise_for_status()
+        data = response.json()
+
+        if data["status"] != "success":
+            logger.error(f"Prometheus 쿼리 실패: {data}")
+            return []
+
+        return data["data"]["result"]
+
+    except requests.exceptions.RequestException as e:
+        logger.error(f"Prometheus 호출 실패: {e}")
+        raise
+
+
 # ─── 노드 메트릭 ────────────────────────────────────────────────────────────
 
 def get_node_metrics() -> dict:
-    """
-    노드(서버) 단위 메트릭 반환
+    """ 노드(서버) 단위 메트릭 반환 """
+    logger.debug(f"노드 메트릭 수집 (source={settings.data_source})")
 
-    Returns:
-        - cpu_percent: 노드 CPU 사용률 (40~85% 랜덤)
-        - memory_gb: 노드 메모리 사용량 (6~12GB 랜덤)
-        - instance_type: 인스턴스 타입
-        - region_code: 리전 코드
-        - timestamp: ISO 8601 형식 시각
-        - source: 데이터 출처 ("mock" | "prometheus")
-    """
+    if settings.data_source == "mock":
+        return _get_node_metrics_mock()
+    elif settings.data_source == "prometheus":
+        return _get_node_metrics_prometheus()
+    else:
+        raise ValueError(f"알 수 없는 data_source: {settings.data_source}")
+
+
+def _get_node_metrics_mock() -> dict:
     return {
         "cpu_percent": round(random.uniform(40, 85), 2),
         "memory_gb": round(random.uniform(6, 12), 2),
-        "instance_type": DEFAULT_INSTANCE_TYPE,
-        "region_code": DEFAULT_REGION_CODE,
+        "instance_type": settings.default_instance_type,
+        "region_code": settings.default_region,
         "timestamp": datetime.now(timezone.utc).isoformat(),
         "source": "mock",
+    }
+
+
+def _get_node_metrics_prometheus() -> dict:
+    """
+    노드 전체 메트릭 산출
+
+    파드별 Kepler 전력을 합산 (시스템 프로세스 제외).
+    파드 메트릭과 동일한 필터링 적용해 일관성 유지.
+    """
+    query = 'sum by (pod_name) (rate(kepler_container_joules_total[1m]))'
+    results = _query_prometheus(query)
+
+    if not results:
+        logger.warning("노드 메트릭 없음, 0으로 처리")
+        return {
+            "cpu_percent": 0.0,
+            "memory_gb": 0.0,
+            "instance_type": settings.default_instance_type,
+            "region_code": settings.default_region,
+            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "source": "prometheus",
+        }
+
+    # 시스템 프로세스 제외하고 합산
+    total_watts = 0.0
+    for item in results:
+        pod_name = item["metric"].get("pod_name", "unknown")
+        watts = float(item["value"][1])
+
+        if pod_name in EXCLUDED_POD_NAMES or watts <= 0:
+            continue
+
+        total_watts += watts
+
+    # Watt → CPU% 역산 (TDP 기준)
+    from core.regions import get_tdp
+    tdp = get_tdp(settings.default_instance_type)
+    cpu_percent = min(100, (total_watts / tdp) * 100) if tdp > 0 else 0
+
+    logger.info(
+        f"노드 메트릭 (Kepler 합계, 시스템 제외): "
+        f"전력 {total_watts:.2f}W, CPU {cpu_percent:.2f}%"
+    )
+
+    return {
+        "cpu_percent": round(cpu_percent, 2),
+        "memory_gb": 0.0,
+        "instance_type": settings.default_instance_type,
+        "region_code": settings.default_region,
+        "timestamp": datetime.now(timezone.utc).isoformat(),
+        "source": "prometheus",
     }
 
 
 # ─── 파드 메트릭 ────────────────────────────────────────────────────────────
 
 def get_pod_metrics() -> dict:
-    """
-    파드별 메트릭 반환
+    """ 파드별 메트릭 반환 """
+    logger.debug(f"파드 메트릭 수집 (source={settings.data_source})")
 
-    Returns:
-        - pods: 파드 메트릭 리스트
-                [{"name": str, "cpu_percent": float, "memory_gb": float}, ...]
-        - node_cpu_total: 노드 전체 CPU 사용률 합계
-        - instance_type: 인스턴스 타입
-        - region_code: 리전 코드
-        - timestamp: ISO 8601 형식 시각
-        - source: 데이터 출처
-    """
+    if settings.data_source == "mock":
+        return _get_pod_metrics_mock()
+    elif settings.data_source == "prometheus":
+        return _get_pod_metrics_prometheus()
+    else:
+        raise ValueError(f"알 수 없는 data_source: {settings.data_source}")
+
+
+def _get_pod_metrics_mock() -> dict:
     pods = []
     node_cpu_total = 0.0
 
     for profile in MOCK_POD_PROFILES:
-        # 베이스 값 ±30% 범위에서 랜덤 변동
         cpu = round(random.uniform(
             profile["base_cpu"] * 0.7,
             profile["base_cpu"] * 1.3
@@ -76,7 +149,6 @@ def get_pod_metrics() -> dict:
             profile["base_mem"] * 0.8,
             profile["base_mem"] * 1.2
         ), 2)
-
         pods.append({
             "name": profile["name"],
             "cpu_percent": cpu,
@@ -87,28 +159,62 @@ def get_pod_metrics() -> dict:
     return {
         "pods": pods,
         "node_cpu_total": round(node_cpu_total, 2),
-        "instance_type": DEFAULT_INSTANCE_TYPE,
-        "region_code": DEFAULT_REGION_CODE,
+        "instance_type": settings.default_instance_type,
+        "region_code": settings.default_region,
         "timestamp": datetime.now(timezone.utc).isoformat(),
         "source": "mock",
     }
 
 
-# ─── 추후 Prometheus 연동 시 교체될 함수 (현재는 NotImplementedError) ────────
-
-def fetch_from_prometheus(query: str) -> dict:
+def _get_pod_metrics_prometheus() -> dict:
     """
-    Prometheus PromQL 쿼리 실행 (Week 2 구현 예정)
-
-    Args:
-        query: PromQL 쿼리 문자열
-               (예: 'kepler_container_joules_total')
-
-    TODO: requests 라이브러리로 Prometheus HTTP API 호출
-        url = f"{PROMETHEUS_URL}/api/v1/query"
-        response = requests.get(url, params={"query": query})
-        return response.json()
+    Kepler 메트릭에서 파드별 전력 데이터 조회
+    시스템 프로세스(kernel_processes, system_processes)는 제외.
     """
-    raise NotImplementedError(
-        "Prometheus 연동은 Week 2 인프라 구축 완료 후 구현됩니다."
+    query = 'sum by (pod_name) (rate(kepler_container_joules_total[1m]))'
+    results = _query_prometheus(query)
+
+    if not results:
+        logger.warning("Kepler 메트릭이 없습니다. mock으로 fallback.")
+        return _get_pod_metrics_mock()
+
+    pods = []
+    node_power_total = 0.0
+
+    for item in results:
+        pod_name = item["metric"].get("pod_name", "unknown")
+        watts = float(item["value"][1])
+
+        if pod_name in EXCLUDED_POD_NAMES or watts <= 0:
+            continue
+
+        # Watt → CPU% 역산 (TDP 기준)
+        from core.regions import get_tdp
+        tdp = get_tdp(settings.default_instance_type)
+        cpu_percent = min(100, (watts / tdp) * 100) if tdp > 0 else 0
+
+        pods.append({
+            "name": pod_name,
+            "cpu_percent": round(cpu_percent, 2),
+            "memory_gb": 0,
+        })
+        node_power_total += watts
+
+    # 노드 전체 CPU% (역산)
+    from core.regions import get_tdp
+    tdp = get_tdp(settings.default_instance_type)
+    node_cpu_total = min(100, (node_power_total / tdp) * 100) if tdp > 0 else 0
+
+    logger.info(
+        f"Prometheus 파드 메트릭: {len(pods)}개 파드, "
+        f"노드 전력 {node_power_total:.2f}W"
     )
+
+    return {
+        "pods": pods,
+        "node_cpu_total": round(node_cpu_total, 2),
+        "instance_type": settings.default_instance_type,
+        "region_code": settings.default_region,
+        "timestamp": datetime.now(timezone.utc).isoformat(),
+        "source": "prometheus",
+    }
