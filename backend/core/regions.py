@@ -1,14 +1,3 @@
-"""
-리전별 탄소 계수 및 인스턴스 TDP 데이터
-
-데이터 출처:
-- carbon_intensity: IEA (국제에너지기구) 2024 국가별 평균 탄소강도
-- pue: AWS Sustainability Report 2024 / Uptime Institute 글로벌 평균
-- sdk_location: Microsoft Carbon Aware SDK location identifier
-- TDP: AWS EC2 인스턴스 스펙 + Cloud Carbon Footprint 프로젝트 데이터
-"""
-
-
 # ─── 리전별 탄소 계수 데이터 ────────────────────────────────────────────────
 REGION_DATA = {
     "ap-northeast-2": {
@@ -67,18 +56,6 @@ INSTANCE_TDP = {
 
 
 def get_region(region_code: str) -> dict:
-    """
-    리전 코드로 탄소 계수 정보 조회
-
-    Args:
-        region_code: AWS 리전 코드 (예: "ap-northeast-2")
-
-    Returns:
-        리전 정보 딕셔너리 (name, pue, sdk_location, carbon_intensity)
-
-    Raises:
-        ValueError: 지원하지 않는 리전 코드인 경우
-    """
     if region_code not in REGION_DATA:
         supported = ", ".join(REGION_DATA.keys())
         raise ValueError(
@@ -89,15 +66,6 @@ def get_region(region_code: str) -> dict:
 
 
 def get_tdp(instance_type: str) -> int:
-    """
-    인스턴스 타입으로 TDP 조회 (없으면 기본값 반환)
-
-    Args:
-        instance_type: AWS 인스턴스 타입 (예: "t3.medium")
-
-    Returns:
-        TDP 값 (W)
-    """
     return INSTANCE_TDP.get(instance_type, INSTANCE_TDP["default"])
 
 
@@ -107,10 +75,5 @@ def get_supported_regions() -> list[str]:
 
 
 def get_sdk_location(region_code: str) -> str:
-    """
-    AWS 리전 코드를 Carbon Aware SDK location 코드로 변환
-
-    Week 2 SDK 연동 시 사용 예정
-    """
     region = get_region(region_code)
     return region["sdk_location"]
