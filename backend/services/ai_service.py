@@ -32,15 +32,27 @@ def _call_ai(endpoint: str, params: dict = None) -> dict:
 def get_current_intensity(zone: str) -> float:
     logger.debug(f"실시간 탄소 강도 조회: zone={zone}")
     
-    data = _call_ai("/intensity/current", params={"zone": zone})
+    # 🌟 [수정 포인트] Azure 리전 코드를 AI 서버가 인식하는 국가 코드로 매핑
+    # 백엔드가 넘겨준 'koreacentral'을 AI 서버용 'KR'로 변환합니다.
+    zone_to_country = {
+        "koreacentral": "KR",
+        "japaneast": "JP",
+        "eastus": "US"
+    }
+    
+    # 매핑 테이블에 존재하면 해당 국가 코드를 쓰고, 없으면 기존 값 그대로 사용
+    ai_zone = zone_to_country.get(zone, zone)
+    
+    # 파라미터에 기존 zone 대신 국가 코드가 담긴 ai_zone을 전달합니다.
+    data = _call_ai("/intensity/current", params={"zone": ai_zone})
     
     # 응답 형식 검증
-    # 예: {"zone": "KR", "carbonIntensity": 409.5, "datetime": "...", "isEstimated": true}
+    # 예: {"zone": "KR", "carbonIntensity": 328, "datetime": "...", "isEstimated": true}
     if "carbonIntensity" not in data:
         raise ValueError(f"예상치 못한 AI 응답 형식: {data}")
     
     intensity = float(data["carbonIntensity"])
-    logger.info(f"AI 실시간 탄소 강도: {zone} = {intensity} gCO₂/kWh")
+    logger.info(f"AI 실시간 탄소 강도: {ai_zone} = {intensity} gCO₂/kWh")
     
     return intensity
 
@@ -50,11 +62,17 @@ def get_current_intensity(zone: str) -> float:
 def get_recommendation(hours: int, zones: list[str]) -> dict:
     logger.debug(f"AI 추천 요청: hours={hours}, zones={zones}")
     
-    # zones는 &zones=KR&zones=JP-TK 형식 (콤마 아님)
-    # requests가 list를 자동으로 이렇게 변환해줌
+    # 🌟 [수정 포인트] 추천 기능에서도 Azure 리전을 국가 코드로 채가도록 변환
+    zone_to_country = {
+        "koreacentral": "KR",
+        "japaneast": "JP",
+        "eastus": "US"
+    }
+    ai_zones = [zone_to_country.get(z, z) for z in zones]
+    
     params = {
         "hours": hours,
-        "zones": zones,
+        "zones": ai_zones,  # 변환된 국가 코드 리스트 전달
     }
     
     data = _call_ai("/recommendation", params=params)

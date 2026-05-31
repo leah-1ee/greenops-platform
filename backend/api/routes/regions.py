@@ -1,6 +1,7 @@
 from fastapi import APIRouter
 
 from core.regions import REGION_DATA, get_region
+from schemas.regions import RegionListResponse, RegionDetailResponse
 from utils.logger import get_logger
 
 logger = get_logger(__name__)
