@@ -1,0 +1,76 @@
+# greenops-backend Deployment
+# 적용: kubectl apply -f infra/manifests/backend/deployment.yaml
+#
+# 리소스 배분 근거 (backend-quota.yaml 범위 내):
+#   requests.cpu 200m / limits.cpu 500m
+#   requests.memory 256Mi / limits.memory 512Mi
+#
+# strategy: Recreate — 단일 노드 환경에서 ResourceQuota 초과를 방지하기 위해
+# 롤링 업데이트 대신 Recreate(기존 Pod 종료 후 신규 Pod 생성) 방식을 사용한다.
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: greenops-backend
+  namespace: greenops-backend
+  labels:
+    app.kubernetes.io/part-of: greenops
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: greenops-backend
+  # 단일 노드 Quota 초과 방지: 구 Pod 먼저 종료 후 신규 Pod 생성
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app: greenops-backend
+        app.kubernetes.io/part-of: greenops
+    spec:
+      serviceAccountName: backend-sa
+      containers:
+        - name: greenops-backend
+          image: docker.io/library/greenops-backend:latest
+          imagePullPolicy: Never
+          ports:
+            - containerPort: 8000
+              protocol: TCP
+
+          # backend-config ConfigMap의 전체 키를 환경변수로 주입
+          envFrom:
+            - configMapRef:
+                name: backend-config
+
+          resources:
+            requests:
+              cpu: "200m"
+              memory: "256Mi"
+            limits:
+              cpu: "500m"
+              memory: "512Mi"
+
+          # 컨테이너 생존 여부 확인 — 실패 시 Pod 재시작
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8000
+              scheme: HTTP
+            initialDelaySeconds: 20
+            periodSeconds: 10
+            failureThreshold: 3
+            successThreshold: 1
+            timeoutSeconds: 1
+
+          # 트래픽 수신 준비 여부 확인 — 실패 시 Service 엔드포인트에서 제외
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 8000
+              scheme: HTTP
+            initialDelaySeconds: 20
+            periodSeconds: 10
+            failureThreshold: 3
+            successThreshold: 1
+            timeoutSeconds: 1

@@ -1,0 +1,37 @@
+# greenops-backend ConfigMap
+# 적용: kubectl apply -f infra/manifests/backend/configmap.yaml
+#
+# 백엔드 서버의 비민감 환경변수를 ConfigMap으로 관리한다.
+# 민감 정보(DB 비밀번호, API 토큰 등)는 Secret으로 별도 관리할 것.
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: backend-config
+  namespace: greenops-backend
+  labels:
+    app.kubernetes.io/part-of: greenops
+data:
+  # Prometheus 메트릭 수집 엔드포인트
+  PROMETHEUS_URL: "http://prometheus-operated.monitoring.svc.cluster.local:9090"
+
+  # Carbon Aware SDK - 탄소 강도 데이터 조회 서비스
+  CARBON_AWARE_SDK_URL: "http://carbon-aware-sdk.greenops-infra.svc.cluster.local:8080"
+
+  # AI 추론 서비스 엔드포인트
+  AI_SERVICE_URL: "http://ai-service.greenops-ai.svc.cluster.local:8001"
+
+  # 클러스터 내부 실행 여부 (in-cluster kubeconfig 사용)
+  K8S_IN_CLUSTER: "true"
+
+  # 메트릭 데이터 소스 종류
+  DATA_SOURCE: "prometheus"
+
+  # 애플리케이션 로그 레벨
+  LOG_LEVEL: "INFO"
+
+  # Prometheus 스크레이프 주기(초)
+  SCRAPE_INTERVAL_SEC: "15"
+
+  # 기본 조회 대상 쿠버네티스 네임스페이스
+  K8S_DEFAULT_NAMESPACE: "greenops-backend"
