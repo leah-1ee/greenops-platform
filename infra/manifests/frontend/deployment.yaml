@@ -1,0 +1,74 @@
+# greenops-front Deployment
+# 적용: kubectl apply -f infra/manifests/frontend/deployment.yaml
+#
+# 리소스 배분 근거 (front-quota.yaml 범위 내):
+#   requests.cpu 100m / limits.cpu 250m
+#   requests.memory 128Mi / limits.memory 256Mi
+#
+# nginx 정적 파일 서버로 연산 부하가 낮아 backend·ai 대비 절반 이하 수치를 배정한다.
+# strategy: Recreate — 단일 노드 환경에서 ResourceQuota 초과를 방지한다.
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: greenops-frontend
+  namespace: greenops-front
+  labels:
+    app.kubernetes.io/part-of: greenops
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: greenops-frontend
+  # 단일 노드 Quota 초과 방지: 구 Pod 먼저 종료 후 신규 Pod 생성
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app: greenops-frontend
+        app.kubernetes.io/part-of: greenops
+    spec:
+      serviceAccountName: front-sa
+      containers:
+        - name: greenops-frontend
+          # TODO: 실제 이미지 주소로 교체 필요
+          # 형식: <REGISTRY>/<REPO>/frontend:latest
+          # 예시: ghcr.io/your-org/greenops/frontend:latest
+          image: <REGISTRY>/<REPO>/frontend:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 80
+              protocol: TCP
+
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "128Mi"
+            limits:
+              cpu: "250m"
+              memory: "256Mi"
+
+          # 컨테이너 생존 여부 확인 — 실패 시 Pod 재시작
+          livenessProbe:
+            httpGet:
+              path: /
+              port: 80
+              scheme: HTTP
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            failureThreshold: 3
+            successThreshold: 1
+            timeoutSeconds: 1
+
+          # 트래픽 수신 준비 여부 확인 — 실패 시 Service 엔드포인트에서 제외
+          readinessProbe:
+            httpGet:
+              path: /
+              port: 80
+              scheme: HTTP
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            failureThreshold: 3
+            successThreshold: 1
+            timeoutSeconds: 1
