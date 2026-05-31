@@ -24,34 +24,8 @@ FROM nginx:alpine
 LABEL maintainer="GreenOps Team"
 LABEL description="React/Vite SPA 정적 파일 서버"
 
-# SPA 라우팅 지원: 모든 경로를 index.html로 폴백
-# nginx.conf 인라인 작성 후 기본 설정 파일을 교체
-COPY <<EOF /etc/nginx/conf.d/default.conf
-server {
-    listen 80;
-    root /usr/share/nginx/html;
-    index index.html;
-
-    # SPA 클라이언트 사이드 라우팅: 정적 파일이 없으면 index.html로 폴백
-    location / {
-        try_files \$uri \$uri/ /index.html;
-    }
-
-    # 백엔드 API 요청을 greenops-backend 서비스로 프록시
-    location /api/ {
-        proxy_pass http://greenops-backend.greenops-backend.svc.cluster.local:8000;
-        proxy_set_header Host \$host;
-        proxy_set_header X-Real-IP \$remote_addr;
-        proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
-    }
-
-    # 정적 에셋 캐시 (Vite 해시 파일명 활용)
-    location ~* \.(js|css|png|jpg|jpeg|gif|ico|svg|woff2?)$ {
-        expires 1y;
-        add_header Cache-Control "public, immutable";
-    }
-}
-EOF
+# SPA 라우팅 및 API 프록시 설정을 별도 파일로 분리해 복사
+COPY nginx.conf /etc/nginx/conf.d/default.conf
 
 # 1단계에서 빌드된 dist 디렉토리를 nginx 서빙 경로로 복사
 COPY --from=builder /app/dist /usr/share/nginx/html
