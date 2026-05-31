@@ -25,6 +25,9 @@ __pycache__/
 .env
 .envrc
 *.env.local
+.env.development
+.env.production
+.env.staging
 
 # ── Terraform ───────────────────────────────
 infra/terraform/.terraform/
