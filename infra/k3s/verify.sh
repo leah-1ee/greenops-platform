@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# GreenOps 인프라 구성 검증 스크립트 (1주차 + 2주차)
+# GreenOps 인프라 구성 검증 스크립트 (1주차 + 2주차 + 3주차)
 #
 # 사용법:
 #   chmod +x infra/k3s/verify.sh
@@ -16,7 +16,7 @@ if [ -z "${KUBECONFIG:-}" ] && [ -f /etc/rancher/k3s/k3s.yaml ]; then
 fi
 
 FAIL_COUNT=0
-TOTAL=16
+TOTAL=21
 
 pass() { echo "  ✅ PASS: $1"; }
 fail() { echo "  ❌ FAIL: $1"; FAIL_COUNT=$((FAIL_COUNT + 1)); }
@@ -238,13 +238,104 @@ else
   fail "greenops-backend → carbon-aware-sdk 네트워크 접근 실패 (응답: ${CROSS_NS_RESULT:0:100})"
 fi
 
+# ─── [17/21] 백엔드 Pod Running 확인 ─────────────────────────────────────────
+echo "[17/${TOTAL}] 백엔드 Pod Running 확인"
+BACKEND_POD=$(kubectl get pods -n greenops-backend 2>/dev/null \
+  | grep "greenops-backend" | grep "Running" | head -1)
+if [ -n "$BACKEND_POD" ]; then
+  POD_NAME=$(echo "$BACKEND_POD" | awk '{print $1}')
+  RESTARTS=$(echo "$BACKEND_POD" | awk '{print $4}')
+  pass "백엔드 Pod Running (이름: ${POD_NAME}, 재시작: ${RESTARTS}회)"
+else
+  BACKEND_ANY=$(kubectl get pods -n greenops-backend 2>/dev/null \
+    | grep "greenops-backend" | head -1)
+  if [ -n "$BACKEND_ANY" ]; then
+    STATUS=$(echo "$BACKEND_ANY" | awk '{print $3}')
+    fail "백엔드 Pod 존재하나 Running 아님 (현재 상태: ${STATUS})"
+  else
+    fail "greenops-backend 네임스페이스에서 greenops-backend Pod를 찾을 수 없음"
+  fi
+fi
+
+# ─── [18/21] AI Pod Running 확인 ─────────────────────────────────────────────
+echo "[18/${TOTAL}] AI Pod Running 확인"
+AI_POD=$(kubectl get pods -n greenops-ai 2>/dev/null \
+  | grep "ai-service" | grep "Running" | head -1)
+if [ -n "$AI_POD" ]; then
+  POD_NAME=$(echo "$AI_POD" | awk '{print $1}')
+  RESTARTS=$(echo "$AI_POD" | awk '{print $4}')
+  pass "AI Pod Running (이름: ${POD_NAME}, 재시작: ${RESTARTS}회)"
+else
+  AI_ANY=$(kubectl get pods -n greenops-ai 2>/dev/null \
+    | grep "ai-service" | head -1)
+  if [ -n "$AI_ANY" ]; then
+    STATUS=$(echo "$AI_ANY" | awk '{print $3}')
+    fail "AI Pod 존재하나 Running 아님 (현재 상태: ${STATUS})"
+  else
+    fail "greenops-ai 네임스페이스에서 ai-service Pod를 찾을 수 없음"
+  fi
+fi
+
+# ─── [19/21] 프론트 Pod Running 확인 ─────────────────────────────────────────
+echo "[19/${TOTAL}] 프론트 Pod Running 확인"
+FRONT_POD=$(kubectl get pods -n greenops-front 2>/dev/null \
+  | grep "greenops-frontend" | grep "Running" | head -1)
+if [ -n "$FRONT_POD" ]; then
+  POD_NAME=$(echo "$FRONT_POD" | awk '{print $1}')
+  RESTARTS=$(echo "$FRONT_POD" | awk '{print $4}')
+  pass "프론트 Pod Running (이름: ${POD_NAME}, 재시작: ${RESTARTS}회)"
+else
+  FRONT_ANY=$(kubectl get pods -n greenops-front 2>/dev/null \
+    | grep "greenops-frontend" | head -1)
+  if [ -n "$FRONT_ANY" ]; then
+    STATUS=$(echo "$FRONT_ANY" | awk '{print $3}')
+    fail "프론트 Pod 존재하나 Running 아님 (현재 상태: ${STATUS})"
+  else
+    fail "greenops-front 네임스페이스에서 greenops-frontend Pod를 찾을 수 없음"
+  fi
+fi
+
+# ─── [20/21] 백엔드 health API 응답 확인 ─────────────────────────────────────
+echo "[20/${TOTAL}] 백엔드 health API 응답 확인"
+BACKEND_POD_NAME=$(kubectl get pods -n greenops-backend 2>/dev/null \
+  | grep "greenops-backend" | grep "Running" | head -1 | awk '{print $1}')
+if [ -z "$BACKEND_POD_NAME" ]; then
+  fail "실행 중인 백엔드 Pod를 찾을 수 없음 (health 확인 불가)"
+else
+  HEALTH_STATUS=$(kubectl exec -n greenops-backend "$BACKEND_POD_NAME" \
+    -- python3 -c "import urllib.request; print(urllib.request.urlopen('http://localhost:8000/health').status)" \
+    2>/dev/null || true)
+  if [ "$HEALTH_STATUS" = "200" ]; then
+    pass "백엔드 /health 응답 200 확인됨 (Pod: ${BACKEND_POD_NAME})"
+  else
+    fail "백엔드 /health 응답 실패 (응답: ${HEALTH_STATUS:-없음}, Pod: ${BACKEND_POD_NAME})"
+  fi
+fi
+
+# ─── [21/21] AI health API 응답 확인 ─────────────────────────────────────────
+echo "[21/${TOTAL}] AI health API 응답 확인"
+AI_POD_NAME=$(kubectl get pods -n greenops-ai 2>/dev/null \
+  | grep "ai-service" | grep "Running" | head -1 | awk '{print $1}')
+if [ -z "$AI_POD_NAME" ]; then
+  fail "실행 중인 AI Pod를 찾을 수 없음 (health 확인 불가)"
+else
+  HEALTH_STATUS=$(kubectl exec -n greenops-ai "$AI_POD_NAME" \
+    -- python3 -c "import urllib.request; print(urllib.request.urlopen('http://localhost:8001/health').status)" \
+    2>/dev/null || true)
+  if [ "$HEALTH_STATUS" = "200" ]; then
+    pass "AI /health 응답 200 확인됨 (Pod: ${AI_POD_NAME})"
+  else
+    fail "AI /health 응답 실패 (응답: ${HEALTH_STATUS:-없음}, Pod: ${AI_POD_NAME})"
+  fi
+fi
+
 # ─── 최종 결과 ────────────────────────────────────────────────────────────────
 echo ""
 echo "──────────────────────────────────────────"
 PASS_COUNT=$((TOTAL - FAIL_COUNT))
 echo "결과: ${PASS_COUNT}/${TOTAL} 항목 PASS"
 if [ "$FAIL_COUNT" -eq 0 ]; then
-  echo "🎉 모든 항목 PASS - 2주차 인프라 구성 완료!"
+  echo "🎉 모든 항목 PASS - 3주차 인프라 구성 완료!"
   exit 0
 else
   echo "⚠️  ${FAIL_COUNT}개 항목 FAIL - 위 FAIL 항목을 확인하세요."

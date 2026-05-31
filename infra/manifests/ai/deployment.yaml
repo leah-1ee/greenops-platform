@@ -43,6 +43,13 @@ spec:
             - configMapRef:
                 name: ai-config
 
+          env:
+            - name: ELECTRICITYMAPS_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: ai-secret
+                  key: ELECTRICITYMAPS_TOKEN
+
           resources:
             requests:
               cpu: "200m"
