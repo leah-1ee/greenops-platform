@@ -2,6 +2,7 @@ from fastapi import APIRouter, HTTPException
 
 from services.infra_service import get_node_metrics, get_pod_metrics
 from core.carbon_calculator import calculate_pod_co2, calculate_multiple_pods
+
 from schemas.carbon import NodeCarbonResponse, PodCarbonResponse
 from utils.logger import get_logger
 

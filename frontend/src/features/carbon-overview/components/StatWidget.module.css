@@ -1,0 +1,64 @@
+/* StatWidget.module.css — ClusterRateWidget / DailyTotalWidget / CarbonScoreWidget 공유 */
+
+.valueRow {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+
+.value {
+  font-size: 36px;
+  font-weight: 700;
+  font-family: var(--font-mono);
+  line-height: 1;
+  color: var(--color-text);
+  transition: color 0.3s;
+}
+
+.unit {
+  font-size: 13px;
+  color: var(--color-text-secondary);
+}
+
+.delta {
+  font-size: 11px;
+  font-family: var(--font-mono);
+  font-weight: 600;
+  margin-left: 4px;
+  align-self: center;
+}
+
+.meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 4px;
+}
+
+.dot {
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.sub {
+  font-size: 11px;
+  color: var(--color-text-muted);
+}
+
+/* Progress bars */
+.budgetBar,
+.scoreBar {
+  height: 4px;
+  background-color: var(--color-border);
+  border-radius: 2px;
+  margin: 8px 0 4px;
+  overflow: hidden;
+}
+
+.budgetFill,
+.scoreFill {
+  height: 100%;
+  border-radius: 2px;
+  transition: width 0.5s ease;
+}

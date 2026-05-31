@@ -1,4 +1,7 @@
 from fastapi import APIRouter, HTTPException
+from pydantic import BaseModel, Field
+from datetime import datetime, timezone
+
 from datetime import datetime, timezone
 
 from schemas.schedule import (
@@ -8,6 +11,29 @@ from schemas.schedule import (
 )
 
 router = APIRouter(prefix="/schedule", tags=["schedule"])
+
+
+# ─── 요청/응답 스키마 ───────────────────────────────────────────────────────
+
+class Recommendation(BaseModel):
+    """ AI팀이 보내는 추천 결과 """
+    pod_name: str = Field(..., description="추천 대상 파드 이름")
+    suggested_times: list[str] = Field(..., description="추천 시간대 Top 3 (HH:MM)")
+    estimated_savings_g: float = Field(..., description="예상 절감 CO₂ (g)")
+    reason: str = Field(..., description="AI 추천 근거")
+
+
+class RecommendationResponse(BaseModel):
+    status: str
+    message: str
+    saved_at: str
+
+
+class ApplyScheduleRequest(BaseModel):
+    """ CronJob 스케줄 변경 요청 """
+    pod_name: str = Field(..., description="변경할 CronJob 이름")
+    new_time: str = Field(..., description="새 실행 시각 (HH:MM)")
+    namespace: str = Field("default", description="K8s 네임스페이스")
 
 
 # ─── 메모리 저장소 ──────────────────────────────────────────────────────────

@@ -25,6 +25,9 @@ __pycache__/
 .env
 .envrc
 *.env.local
+.env.development
+.env.production
+.env.staging
 
 # ── Terraform ───────────────────────────────
 infra/terraform/.terraform/
@@ -55,6 +58,9 @@ infra/manifests/carbon-aware-sdk/secret.yaml
 # ── OS ──────────────────────────────────────
 .DS_Store
 Thumbs.db
+
+# ── Frontend ────────────────────────────────
+frontend/node_modules/
 
 # ── 로그 ────────────────────────────────────
 *.log
