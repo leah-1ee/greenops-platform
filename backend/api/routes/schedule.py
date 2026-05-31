@@ -2,6 +2,13 @@ from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, Field
 from datetime import datetime, timezone
 
+from datetime import datetime, timezone
+
+from schemas.schedule import (
+    Recommendation,
+    RecommendationResponse,
+    ApplyScheduleRequest,
+)
 
 router = APIRouter(prefix="/schedule", tags=["schedule"])
 
