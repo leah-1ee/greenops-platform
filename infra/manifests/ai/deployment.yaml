@@ -32,11 +32,8 @@ spec:
       serviceAccountName: ai-sa
       containers:
         - name: ai-service
-          # TODO: 실제 이미지 주소로 교체 필요
-          # 형식: <REGISTRY>/<REPO>/ai-service:latest
-          # 예시: ghcr.io/your-org/greenops/ai-service:latest
-          image: <REGISTRY>/<REPO>/ai-service:latest
-          imagePullPolicy: Always
+          image: docker.io/library/greenops-ai:latest
+          imagePullPolicy: Never
           ports:
             - containerPort: 8001
               protocol: TCP

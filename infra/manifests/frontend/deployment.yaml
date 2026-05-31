@@ -32,11 +32,8 @@ spec:
       serviceAccountName: front-sa
       containers:
         - name: greenops-frontend
-          # TODO: 실제 이미지 주소로 교체 필요
-          # 형식: <REGISTRY>/<REPO>/frontend:latest
-          # 예시: ghcr.io/your-org/greenops/frontend:latest
-          image: <REGISTRY>/<REPO>/frontend:latest
-          imagePullPolicy: Always
+          image: docker.io/library/greenops-frontend:latest
+          imagePullPolicy: Never
           ports:
             - containerPort: 80
               protocol: TCP
