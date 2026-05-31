@@ -13,8 +13,10 @@ COPY package.json package-lock.json ./
 RUN npm ci
 
 # 소스 코드 전체 복사 후 정적 파일 빌드
-# VITE_API_BASE_URL 등 VITE_ 접두사 환경변수는 이 단계에서 주입해야 한다.
-# 예: docker build --build-arg VITE_API_BASE_URL=http://... 후 ARG/ENV 처리
+# VITE_API_BASE_URL 등 VITE_ 접두사 환경변수는 빌드 시 ARG로 주입
+# 예: docker build --build-arg VITE_API_BASE_URL=/api .
+ARG VITE_API_BASE_URL
+ENV VITE_API_BASE_URL=$VITE_API_BASE_URL
 COPY . .
 RUN npm run build
 
